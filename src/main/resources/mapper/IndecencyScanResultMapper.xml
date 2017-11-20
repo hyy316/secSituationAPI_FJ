@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.uway.mobile.mapper.IndecencyScanResultMapper" >
+  <resultMap id="BaseResultMap" type="com.uway.mobile.domain.IndecencyScanResult" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="assertInfoId" property="assertinfoid" jdbcType="INTEGER" />
+    <result column="ip" property="ip" jdbcType="VARCHAR" />
+	<result column="port" property="port" jdbcType="VARCHAR" />
+	<result column="department" property="department" jdbcType="VARCHAR" />
+    <result column="oriurl" property="oriurl" jdbcType="VARCHAR" />
+    <result column="url" property="url" jdbcType="VARCHAR" />
+    <result column="scantime" property="scantime" jdbcType="TIMESTAMP" />
+    <result column="title" property="title" jdbcType="VARCHAR" />
+    <result column="sensitype" property="sensitype" jdbcType="VARCHAR" />
+    <result column="occurence" property="occurence" jdbcType="VARCHAR" />
+    <result column="esid" property="esid" jdbcType="VARCHAR" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.uway.mobile.domain.IndecencyScanResult">
+    <result column="htmlContent" jdbcType="LONGVARCHAR" property="htmlcontent" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+      id, assertInfoId,notify,ip, port, department, oriurl, url, scantime, title, sensitype, occurence, esid
+  </sql>
+  <sql id="Blob_Column_List">
+    htmlContent
+  </sql>
+  <select id="getIndecencyScanResult" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select
+		<include refid="Base_Column_List" />
+		,
+    <include refid="Blob_Column_List" />
+		from indecencyScanResult isr where 1=1
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and scantime >= #{beginTime}
+            ]]>
+        </if>
+        <if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and scantime <= #{endTime}
+            ]]>
+        </if>
+        <if test="oriurl != null and oriurl != ''">
+			AND oriurl = #{oriurl}
+		</if>
+		<if test="notify != null and notify != ''">
+			AND notify = #{notify}
+		</if>
+		<if test="ip != null and ip != ''">
+			AND ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND port = #{port}
+		</if>
+		<if test="department != null and department != ''">
+			AND department like CONCAT('%',#{department},'%')  
+		</if>
+		<if test="url != null and url != ''">
+			AND url = #{url}
+		</if>
+		<if test="sensitype != null and sensitype != ''">
+			AND sensitype = #{sensitype}
+		</if>
+		<if test="occurence != null and occurence != ''">
+			AND occurence = #{occurence}
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and scantime >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and scantime <= NOW()]]>
+		</if>
+		<if test="vulnerable != null and vulnerable == 'true'">
+			and exists(
+			select ass.ip from assetInformation ass ,vulnerability vul 
+			where ass.id = isr.assertInfoId and ass.ip = vul.ip and ass.port = vul.port
+			and vul.vulstatus =1
+			)
+		</if>
+				
+		order by id asc limit #{page_num} , #{page_size}
+	</select>
+	
+	<select id="countindecencyScanResults" parameterType="java.util.Map"
+		resultType="long">
+		SELECT COUNT(1) FROM indecencyScanResult isr where 1=1
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and scantime >= #{beginTime}
+            ]]>
+        </if>
+        <if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and scantime <= #{endTime}
+            ]]>
+        </if>
+        <if test="oriurl != null and oriurl != ''">
+			AND oriurl = #{oriurl}
+		</if>
+		<if test="notify != null and notify != ''">
+			AND notify = #{notify}
+		</if>
+		<if test="ip != null and ip != ''">
+			AND ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND port = #{port}
+		</if>
+		<if test="department != null and department != ''">
+			AND department like CONCAT('%',#{department},'%')  
+		</if>
+		<if test="url != null and url != ''">
+			AND url = #{url}
+		</if>
+		<if test="sensitype != null and sensitype != ''">
+			AND sensitype = #{sensitype}
+		</if>
+		<if test="occurence != null and occurence != ''">
+			AND occurence = #{occurence}
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and scantime >= DATE_SUB(NOW(),INTERVAL  ${timeRange}) and scantime <= NOW()]]>
+		</if>
+		<if test="vulnerable != null and vulnerable == 'true'">
+			and exists(
+			select ass.ip from assetInformation ass ,vulnerability vul 
+			where ass.id = isr.assertInfoId and ass.ip = vul.ip and ass.port = vul.port
+			and vul.vulstatus =1
+			)
+		</if>
+	</select>
+
+	<select id="groupByParm" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		SELECT ${groupfields},COUNT(1) sum FROM indecencyScanResult isr where 1=1
+		<if test="department != null and department != ''">
+			AND department like CONCAT('%',#{department},'%') 
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and scantime >= DATE_SUB(NOW(),INTERVAL  ${timeRange}) and scantime <= NOW()]]>
+		</if>
+		group by ${groupfields} order by sum desc LIMIT #{topn}
+	</select>
+
+	<select id="groupByTime" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		<![CDATA[ 		select FROM_UNIXTIME(timekey*(60/${size}*60*${hours}),'%Y-%m-%d %H:%i') time ,timeunit.timekey,coalesce(dat.sum,0) sum from
+		(select floor(unix_timestamp(date_sub(now(), 
+		INTERVAL (@num:= @num + 60/${size}*${hours})-60/${size}*${hours} MINUTE))/(60/${size}*60*${hours})) as timekey 
+		from indecencyScanResult ,(select @num:=0) t 
+		where @num < 60*${hours} order by timekey
+		 ) timeunit left join 
+		(select floor(unix_timestamp(scantime)/(60/${size}*60*${hours})) timekey2,count(*) sum
+		FROM indecencyScanResult isr where 1=1  ]]>
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and scantime >= #{beginTime}
+            ]]>
+        </if>
+        <if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and scantime <= #{endTime}
+            ]]>
+        </if>
+         <if test="oriurl != null and oriurl != ''">
+			AND oriurl = #{oriurl}
+		</if>
+		<if test="notify != null and notify != ''">
+			AND notify = #{notify}
+		</if>
+		<if test="ip != null and ip != ''">
+			AND ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND port = #{port}
+		</if>
+		<if test="department != null and department != ''">
+			AND department like CONCAT('%',#{department},'%')  
+		</if>
+		<if test="url != null and url != ''">
+			AND url = #{url}
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and scantime >= DATE_SUB(NOW(),INTERVAL  ${timeRange}) and scantime <= NOW()]]>
+		</if>
+		group by timekey2 ) dat on timeunit.timekey = dat.timekey2 order by time
+	</select>
+	
+	<select id="groupByAsset" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		SELECT ass.${groupfields},COUNT(1) sum FROM indecencyScanResult isr,assetInformation ass where  ass.id = isr.assertInfoId 
+		<if test="department != null and department != ''">
+			AND ass.department like CONCAT('%',#{department},'%') 
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and scantime >= DATE_SUB(NOW(),INTERVAL  ${timeRange}) and scantime <= NOW()]]>
+		</if>
+		group by ass.${groupfields} order by sum desc LIMIT #{topn}
+	</select>
+
+	
+	<insert id="insert" parameterType="java.util.List" >
+   		 insert into indecencyScanResult
+		    (
+		   		assertinfoid,notify,ip,port,department,oriurl,url,scantime,title,sensitype,
+		   		occurence,esid,htmlcontent	
+   	 		)
+		    values 
+		    <foreach collection="list" item="item" index="index" separator="," >
+		    (
+		      #{item.assertinfoid},
+		      #{item.notify},
+		      #{item.ip}, 
+		      #{item.port},
+		      #{item.department},
+		      #{item.oriurl}, 
+		      #{item.url},
+		      #{item.scantime},
+		      #{item.title}, 
+		      #{item.sensitype},
+		      #{item.occurence},
+		      #{item.esid},
+		      #{item.htmlcontent}
+		      )
+   			 </foreach>
+ 	</insert>
+ 
+</mapper>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.uway.mobile.mapper.AssetInventoryServiceMapper" >
+  <resultMap id="BaseResultMap" type="com.uway.mobile.domain.CRCassetInventory" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="department" property="department" jdbcType="VARCHAR" />
+    <result column="ip" property="ip" jdbcType="VARCHAR" />
+    <result column="port" property="port" jdbcType="VARCHAR" />
+    <result column="domain" property="domain" jdbcType="VARCHAR" />
+    <result column="web" property="web" jdbcType="VARCHAR" />
+    <result column="mainClass" property="mainclass" jdbcType="VARCHAR" />
+    <result column="childClass" property="childclass" jdbcType="VARCHAR" />
+    <result column="time" property="time" jdbcType="TIMESTAMP" />
+  </resultMap>
+
+  <sql id="Base_Column_List" >
+      id, department, ip, port, domain, web, mainClass, childClass, time
+  </sql>
+  
+  <select id="getCrcAssetInventory" parameterType="java.util.Map" resultType="java.util.Map">
+    select
+    <include refid="Base_Column_List" />
+   		 from CRCassetInventory cas where 1=1
+     		
+     	<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and time >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and time <= NOW()]]>
+		</if>	
+   		 <if test="department != null and department != ''">
+			AND cas.department like CONCAT('%',#{department},'%')
+		</if>
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and cas.time >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and cas.time <= #{endTime}
+            ]]>
+		</if>
+		<if test="ip != null and ip != ''">
+			AND cas.ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND cas.port = #{port}
+		</if>
+		<if test="domain != null and domain != ''">
+			AND cas.domain = #{domain}
+		</if>
+		<if test="web != null and web != ''">
+			AND cas.web like CONCAT('%',#{web},'%')
+		</if>
+		<if test="mainClass != null and mainClass != ''">
+			AND cas.mainClass like CONCAT('%',#{mainClass},'%')
+		</if>
+		<if test="childClass != null and childClass != ''">
+			AND cas.childClass like CONCAT('%',#{childClass},'%')
+		</if>
+    	order by id asc limit #{page_num}, #{page_size}
+  </select>
+  
+   <select id="countCrcAssetInventory" parameterType="java.util.Map" resultType="java.lang.Long" >
+    select count(*) from CRCassetInventory cas where 1=1
+    
+    	<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and time >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and time <= NOW()]]>
+		</if> 
+   		 <if test="department != null and department != ''">
+			AND cas.department like CONCAT('%',#{department},'%')
+		</if>
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and cas.time >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and cas.time <= #{endTime}
+            ]]>
+		</if>
+		<if test="ip != null and ip != ''">
+			AND cas.ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND cas.port = #{port}
+		</if>
+		<if test="domain != null and domain != ''">
+			AND cas.domain = #{domain}
+		</if>
+		<if test="web != null and web != ''">
+			AND cas.web like CONCAT('%',#{web},'%')
+		</if>
+		<if test="mainClass != null and mainClass != ''">
+			AND cas.mainClass like CONCAT('%',#{mainClass},'%')
+		</if>
+		<if test="childClass != null and childClass != ''">
+			AND cas.childClass like CONCAT('%',#{childClass},'%')
+		</if>
+  </select>
+  
+  <select id="groupByParm" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		SELECT ${groupfields},COUNT(1) sum FROM CRCassetInventory cas where 1=1
+		
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and time >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and time <= NOW()]]>
+		</if>
+		<if test="department != null and department != ''">
+			AND cas.department like CONCAT('%',#{department},'%')
+		</if>
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and cas.time >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and cas.time <= #{endTime}
+            ]]>
+		</if>
+		<if test="ip != null and ip != ''">
+			AND cas.ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND cas.port = #{port}
+		</if>
+		<if test="domain != null and domain != ''">
+			AND cas.domain = #{domain}
+		</if>
+		<if test="web != null and web != ''">
+			AND cas.web like CONCAT('%',#{web},'%')
+		</if>
+		<if test="mainClass != null and mainClass != ''">
+			AND cas.mainClass like CONCAT('%',#{mainClass},'%')
+		</if>
+		<if test="childClass != null and childClass != ''">
+			AND cas.childClass like CONCAT('%',#{childClass},'%')
+		</if>
+		group by ${groupfields} order by sum desc LIMIT #{topn}
+	</select>
+	
+</mapper>

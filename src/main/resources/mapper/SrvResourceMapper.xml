@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.uway.mobile.mapper.SrvResourceMapper">
+	<resultMap id="BaseResultMap" type="com.uway.mobile.domain.SrvResource">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="department" jdbcType="VARCHAR" property="department" />
+		<result column="ip" jdbcType="VARCHAR" property="ip" />
+		<result column="port" jdbcType="VARCHAR" property="port" />
+		<result column="service" jdbcType="VARCHAR" property="service" />
+		<result column="softwareinfo" jdbcType="VARCHAR" property="softwareinfo" />
+		<result column="createtime" jdbcType="TIMESTAMP" property="createtime" />
+		<result column="updatetime" jdbcType="TIMESTAMP" property="updatetime" />
+		<result column="state" jdbcType="VARCHAR" property="state" />
+
+	</resultMap>
+
+
+	<sql id="Base_Column_List">
+		srv.id, srv.department, srv.ip, srv.port, srv.service,
+		srv.softwareinfo,
+		srv.createtime, srv.updatetime,
+		srv.state
+	</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer"
+		resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from srvResource srv
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	<select id="getSrvResources" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select
+		<include refid="Base_Column_List" />
+		from srvResource srv
+		
+		where 1=1
+		<if test="department != null and department != ''">
+			AND srv.department like CONCAT('%',#{department},'%')
+		</if>
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and srv.createtime >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and srv.createtime <= #{endTime}
+            ]]>
+		</if>
+		<if test="ip != null and ip != ''">
+			AND srv.ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND srv.port = #{port}
+		</if>
+		<if test="service != null and service != ''">
+			AND srv.service = #{service}
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and srv.createtime >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and srv.createtime <= NOW()]]>
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'true' ">
+			AND exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'false' ">
+			AND NOT exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'true' ">
+			AND exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'false' ">
+			AND NOT exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+		order by id asc limit #{page_num}, #{page_size}
+	</select>
+
+	<select id="countSrvResources" parameterType="java.util.Map"
+		resultType="long">
+		select count(1)
+		from srvResource srv 
+		where 1=1
+		<if test="department != null and department != ''">
+			AND srv.department like CONCAT('%',#{department},'%')
+		</if>
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and srv.createtime >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and srv.createtime <= #{endTime}
+            ]]>
+		</if>
+		<if test="ip != null and ip != ''">
+			AND srv.ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND srv.port = #{port}
+		</if>
+		<if test="service != null and service != ''">
+			AND srv.service = #{service}
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and srv.createtime >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and srv.createtime <= NOW()]]>
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'true' ">
+			AND exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'false' ">
+			AND NOT exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'true' ">
+			AND exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'false' ">
+			AND NOT exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+	</select>
+
+	<select id="groupByParm" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		SELECT srv.${groupfields},COUNT(1) sum FROM srvResource srv
+			where 1=1
+		<if test="department != null and department != ''">
+			AND srv.department like CONCAT('%',#{department},'%')
+		</if>
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and srv.createtime >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and srv.createtime <= #{endTime}
+            ]]>
+		</if>
+		<if test="ip != null and ip != ''">
+			AND srv.ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND srv.port = #{port}
+		</if>
+		<if test="service != null and service != ''">
+			AND srv.service = #{service}
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and srv.createtime >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and srv.createtime <= NOW()]]>
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'true' ">
+			AND exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'false' ">
+			AND NOT exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'true' ">
+			AND exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'false' ">
+			AND NOT exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+		group by ${groupfields} order by sum desc LIMIT #{topn}
+	</select>
+
+	<select id="groupByTime" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		<![CDATA[ 		select FROM_UNIXTIME(timekey*(60/${size}*60*${hours}),'%Y-%m-%d %H:%i') time ,timeunit.timekey,coalesce(dat.sum,0) sum from
+		(select floor(unix_timestamp(date_sub(now(), 
+		INTERVAL (@num:= @num + 60/${size}*${hours})-60/${size}*${hours} MINUTE))/(60/${size}*60*${hours})) as timekey 
+		from srvResource ,(select @num:=0) t 
+		where @num < 60*${hours} order by timekey
+		 ) timeunit left join 
+		(select floor(unix_timestamp(srv.createtime)/(60/${size}*60*${hours})) timekey2,count(*) sum
+		FROM srvResource srv  ]]>
+		where 1=1
+		<if test="department != null and department != ''">
+			AND srv.department like CONCAT('%',#{department},'%')
+		</if>
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and srv.createtime >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and srv.createtime <= #{endTime}
+            ]]>
+		</if>
+		<if test="ip != null and ip != ''">
+			AND srv.ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND srv.port = #{port}
+		</if>
+		<if test="service != null and service != ''">
+			AND srv.service = #{service}
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and srv.createtime >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and srv.createtime <= NOW()]]>
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'true' ">
+			AND exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'false' ">
+			AND NOT exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'true' ">
+			AND exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'false' ">
+			AND NOT exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+		group by timekey2 ) dat on timeunit.timekey = dat.timekey2 order by
+		time
+	</select>
+
+	<select id="groupByMonth" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		<![CDATA[ 		select time,coalesce(dat.sum,0) sum from 
+		(select period_add(extract(year_month from now()), -(@num:= @num + 1 )) as time 
+		from srvResource ,(select @num:= -1) t 
+		where @num < ${months}-1  order by time ) timeunit
+		  left join 
+		(select extract(year_month from srv.createtime) timekey2,count(*) sum
+		FROM srvResource srv 
+  ]]>
+		where 1=1
+		<if test="department != null and department != ''">
+			AND srv.department like CONCAT('%',#{department},'%')
+		</if>
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and srv.createtime >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and srv.createtime <= #{endTime}
+            ]]>
+		</if>
+		<if test="ip != null and ip != ''">
+			AND srv.ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND srv.port = #{port}
+		</if>
+		<if test="service != null and service != ''">
+			AND srv.service = #{service}
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and srv.createtime >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and srv.createtime <= NOW()]]>
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'true' ">
+			AND exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'false' ">
+			AND NOT exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'true' ">
+			AND exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'false' ">
+			AND NOT exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+		group by timekey2 ) dat on timeunit.time = dat.timekey2 order by time
+	</select>
+
+	<select id="groupByDay" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		<![CDATA[ 		select time,coalesce(dat.sum,0) sum from 
+		(select DATE_SUB(CURDATE(),INTERVAL (@num:= @num + 1 ) DAY) as time 
+		from srvResource ,(select @num:= -1) t 
+		where @num < ${days}-1  order by time ) timeunit
+		  left join 
+		(select extract(year_month from srv.createtime) timekey2,count(*) sum
+		FROM srvResource srv 
+  ]]>
+		where 1=1
+		<if test="department != null and department != ''">
+			AND srv.department like CONCAT('%',#{department},'%')
+		</if>
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and srv.createtime >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and srv.createtime <= #{endTime}
+            ]]>
+		</if>
+		<if test="ip != null and ip != ''">
+			AND srv.ip = #{ip}
+		</if>
+		<if test="port != null and port != ''">
+			AND srv.port = #{port}
+		</if>
+		<if test="service != null and service != ''">
+			AND srv.service = #{service}
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and srv.createtime >= DATE_SUB(NOW(),INTERVAL   ${timeRange})  and  srv.createtime <= NOW()]]>
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'true' ">
+			AND exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" isRegisted != null and isRegisted == 'false' ">
+			AND NOT exists ( select 1 from assetInformation ass where srv.ip = ass.ip and srv.port = ass.port )
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'true' ">
+			AND exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+		<if test=" vulnerable != null and vulnerable == 'false' ">
+			AND NOT exists ( select 1 from vulnerability vul where  srv.ip = vul.ip and srv.port =	vul.port
+             and vul.vulstatus = 1	)
+		</if>
+		group by timekey2 ) dat on timeunit.time = dat.timekey2 order by time
+	</select>
+
+
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from
+		srvResource
+		where id = #{id,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" parameterType="com.uway.mobile.domain.SrvResource">
+		insert into srvResource (id,
+		department, ip,
+		port, service, softwareinfo,
+		createtime, updatetime,
+		state
+		)
+		values (#{id,jdbcType=INTEGER}, #{department,jdbcType=VARCHAR},
+		#{ip,jdbcType=VARCHAR},
+		#{port,jdbcType=VARCHAR},
+		#{service,jdbcType=VARCHAR}, #{softwareinfo,jdbcType=VARCHAR},
+		#{createtime,jdbcType=TIMESTAMP}, #{updatetime,jdbcType=TIMESTAMP},
+		#{state,jdbcType=VARCHAR}
+		)
+	</insert>
+	<insert id="insertSelective" parameterType="com.uway.mobile.domain.SrvResource">
+		insert into srvResource
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="department != null">
+				department,
+			</if>
+			<if test="ip != null">
+				ip,
+			</if>
+			<if test="port != null">
+				port,
+			</if>
+			<if test="service != null">
+				service,
+			</if>
+			<if test="softwareinfo != null">
+				softwareinfo,
+			</if>
+			<if test="createtime != null">
+				createtime,
+			</if>
+			<if test="updatetime != null">
+				updatetime,
+			</if>
+			<if test="state != null">
+				state,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=INTEGER},
+			</if>
+			<if test="department != null">
+				#{department,jdbcType=VARCHAR},
+			</if>
+			<if test="ip != null">
+				#{ip,jdbcType=VARCHAR},
+			</if>
+			<if test="port != null">
+				#{port,jdbcType=VARCHAR},
+			</if>
+			<if test="service != null">
+				#{service,jdbcType=VARCHAR},
+			</if>
+			<if test="softwareinfo != null">
+				#{softwareinfo,jdbcType=VARCHAR},
+			</if>
+			<if test="createtime != null">
+				#{createtime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="updatetime != null">
+				#{updatetime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="state != null">
+				#{state,jdbcType=VARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="com.uway.mobile.domain.SrvResource">
+		update srvResource
+		<set>
+			<if test="department != null">
+				department = #{department,jdbcType=VARCHAR},
+			</if>
+			<if test="ip != null">
+				ip = #{ip,jdbcType=VARCHAR},
+			</if>
+			<if test="port != null">
+				port = #{port,jdbcType=VARCHAR},
+			</if>
+			<if test="service != null">
+				service = #{service,jdbcType=VARCHAR},
+			</if>
+			<if test="softwareinfo != null">
+				softwareinfo = #{softwareinfo,jdbcType=VARCHAR},
+			</if>
+			<if test="createtime != null">
+				createtime = #{createtime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="updatetime != null">
+				updatetime = #{updatetime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="state != null">
+				state = #{state,jdbcType=VARCHAR},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.uway.mobile.domain.SrvResource">
+		update srvResource
+		set department = #{department,jdbcType=VARCHAR},
+		ip =
+		#{ip,jdbcType=VARCHAR},
+		port = #{port,jdbcType=VARCHAR},
+		service =
+		#{service,jdbcType=VARCHAR},
+		softwareinfo =
+		#{softwareinfo,jdbcType=VARCHAR},
+		createtime =
+		#{createtime,jdbcType=TIMESTAMP},
+		updatetime =
+		#{updatetime,jdbcType=TIMESTAMP},
+		state = #{state,jdbcType=VARCHAR}
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<select id="getAll" resultType="com.uway.mobile.domain.SrvResource">
+		SELECT *FROM srvResource
+	</select>
+	<insert id="insertBath" parameterType="java.util.List">
+		insert into srvResource
+		(
+		department, ip, port, service, softwareinfo, createtime
+		)
+		values
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(
+			#{item.department},
+			#{item.ip},
+			#{item.port},
+			#{item.service},
+			#{item.softwareinfo},
+			#{item.createtime}
+			)
+		</foreach>
+	</insert>
+
+</mapper>

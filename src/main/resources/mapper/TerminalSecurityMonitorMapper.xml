@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.uway.mobile.mapper.TerminalSecurityMapper" >
+  <resultMap id="BaseResultMap" type="com.uway.mobile.domain.TerminalSecurty" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="number" property="number" jdbcType="VARCHAR" />
+    <result column="position" property="position" jdbcType="VARCHAR" />
+    <result column="logCategory" property="logcategory" jdbcType="VARCHAR" />
+    <result column="description" property="description" jdbcType="VARCHAR" />
+    <result column="duration" property="duration" jdbcType="VARCHAR" />
+    <result column="IMEI" property="imei" jdbcType="VARCHAR" />
+    <result column="plaformSystem" property="plaformsystem" jdbcType="VARCHAR" />
+    <result column="ipaddress" property="ipaddress" jdbcType="VARCHAR" />
+    <result column="reportingTime" property="reportingtime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+      id, number, position, logCategory, description, duration, IMEI, plaformSystem, ipaddress, 
+      reportingTime
+  </sql>
+  <select id="getTerminalSecurity" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		select
+		<include refid="Base_Column_List" />
+		from terminalSecurity ts where 1=1
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and ts.reportingtime >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and ts.reportingtime <= #{endTime}
+            ]]>
+		</if>
+		<if test="department != null and department != '' " >
+     		 and ts.position like CONCAT('%',#{department},'%')
+   		</if>
+		<if test="logcategory != null and logcategory != '' " >
+     		 and ts.logcategory like CONCAT('%',#{logcategory},'%')
+   		</if>
+		<if test="description != null and description != '' " >
+     		 and ts.description like CONCAT('%',#{description},'%')
+   		</if>
+   		<if test="ipaddress != null and ipaddress != ''">
+			AND ts.ipaddress = #{ipaddress}
+		</if>
+   		<if test="number != null and number != ''">
+			AND ts.number like CONCAT('%',#{number},'%')
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and ts.reportingtime >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and ts.reportingtime <= NOW()]]>
+		</if>
+			order by id asc limit #{page_num} , #{page_size}
+	</select>
+  
+  <select id="countTerminalSecurity" parameterType="java.util.Map" resultType="long">
+		SELECT COUNT(1) FROM terminalSecurity ts where 1=1
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and ts.reportingtime >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and ts.reportingtime <= #{endTime}
+            ]]>
+		</if>
+		<if test="department != null and department != '' " >
+     		 and ts.position like CONCAT('%',#{department},'%')
+   		</if>
+		<if test="logcategory != null and logcategory != '' " >
+     		 and ts.logcategory like CONCAT('%',#{logcategory},'%')
+   		</if>
+		<if test="description != null and description != '' " >
+     		 and ts.description like CONCAT('%',#{description},'%')
+   		</if>
+   		<if test="ipaddress != null and ipaddress != ''">
+			AND ts.ipaddress = #{ipaddress}
+		</if>
+   		<if test="number != null and number != ''">
+			AND ts.number like CONCAT('%',#{number},'%')
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and ts.reportingtime >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and ts.reportingtime <= NOW()]]>
+		</if>
+	</select>
+  
+  <select id="groupByParm" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		SELECT ${groupfields},COUNT(1) sum FROM terminalSecurity ts where 1=1
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and ts.reportingtime >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and ts.reportingtime <= #{endTime}
+            ]]>
+		</if>
+		<if test="department != null and department != '' " >
+     		 and ts.position like CONCAT('%',#{department},'%')
+   		</if>
+		<if test="logcategory != null and logcategory != '' " >
+     		 and ts.logcategory like CONCAT('%',#{logcategory},'%')
+   		</if>
+		<if test="description != null and description != '' " >
+     		 and ts.description like CONCAT('%',#{description},'%')
+   		</if>
+   		<if test="ipaddress != null and ipaddress != ''">
+			AND ts.ipaddress = #{ipaddress}
+		</if>
+   		<if test="number != null and number != ''">
+			AND ts.number like CONCAT('%',#{number},'%')
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and ts.reportingtime >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and ts.reportingtime <= NOW()]]>
+		</if>
+		group by ${groupfields} order by ${groupfields} desc LIMIT #{topn}
+	</select>
+	
+	  <select id="groupByMulParm" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select dep.position,dep.logcategory,coalesce(rep.sum,0) sum from 
+		(select * from 
+		(select distinct(position) position from terminalSecurity where 1=1 
+		<if test="department != null and department != '' " >
+     		 and position like CONCAT('%',#{department},'%')
+   		</if>
+		) pos,
+		(select distinct(logcategory) logcategory from terminalSecurity where 1=1 
+		) cat
+		 order by pos.position,cat.logcategory ) dep left join 
+		(
+		SELECT ${groupfields},COUNT(1) sum FROM terminalSecurity ts where 1=1
+		<if test="beginTime !=null and beginTime !=''">
+            <![CDATA[
+            and ts.reportingtime >= #{beginTime}
+            ]]>
+		</if>
+		<if test="endTime !=null and endTime !=''">
+            <![CDATA[
+            and ts.reportingtime <= #{endTime}
+            ]]>
+		</if>
+		<if test="department != null and department != '' " >
+     		 and ts.position like CONCAT('%',#{department},'%')
+   		</if>
+		<if test="logcategory != null and logcategory != '' " >
+     		 and ts.logcategory like CONCAT('%',#{logcategory},'%')
+   		</if>
+		<if test="description != null and description != '' " >
+     		 and ts.description like CONCAT('%',#{description},'%')
+   		</if>
+   		<if test="ipaddress != null and ipaddress != ''">
+			AND ts.ipaddress = #{ipaddress}
+		</if>
+   		<if test="number != null and number != ''">
+			AND ts.number like CONCAT('%',#{number},'%')
+		</if>
+		<if test="timeRange != null and timeRange != ''">
+			<![CDATA[ and ts.reportingtime >= DATE_SUB(NOW(),INTERVAL  ${timeRange})  and ts.reportingtime <= NOW()]]>
+		</if>
+		group by ${groupfields} order by ${groupfields} ) rep
+		on dep.position  = rep.position and dep.logcategory  = rep.logcategory
+	</select>
+  
+</mapper>
